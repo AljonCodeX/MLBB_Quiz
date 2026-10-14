@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MLBB Trivia Quiz</title>
+  <meta name="description" content="A fun Mobile Legends trivia quiz. How many can you get right?" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="card">
+
+    <!-- Start screen -->
+    <section id="start-screen">
+      <h1>MLBB Trivia</h1>
+      <p class="subtitle">10 random questions. How high can you rank?</p>
+      <button id="start-btn" class="btn">Start Quiz</button>
+    </section>
+
+    <!-- Quiz screen -->
+    <section id="quiz-screen" hidden>
+      <div class="top-bar">
+        <span id="progress">Question 1 / 10</span>
+        <span id="score">Score: 0</span>
+      </div>
+      <div class="progress-track"><div id="progress-fill"></div></div>
+      <p id="category" class="category"></p>
+      <h2 id="question"></h2>
+      <div id="options" class="options"></div>
+      <button id="next-btn" class="btn" hidden>Next</button>
+    </section>
+
+    <!-- Result screen -->
+    <section id="result-screen" hidden>
+      <h1>Quiz Complete!</h1>
+      <p class="big-score"><span id="final-score">0</span> / <span id="total">10</span></p>
+      <p id="rank-title" class="rank"></p>
+      <p id="rank-message" class="subtitle"></p>
+      <form id="save-form" class="save-form">
+        <input id="name" type="text" maxlength="20" placeholder="Your name" required />
+        <button class="btn" type="submit">Save Score to Leaderboard</button>
+      </form>
+      <p id="saved-msg" class="new-best" hidden>Score saved!</p>
+      <button id="restart-btn" class="btn">Play Again</button>
+    </section>
+
+    <!-- Leaderboard (loaded from the database) -->
+    <div id="board">
+      <h3>Top 10</h3>
+      <ol id="leaderboard"></ol>
+    </div>
+
+  </main>
+
+  <p class="footer">Fan-made trivia. Not affiliated with Moonton.</p>
+
+  <script src="script.js"></script>
+</body>
+</html>
