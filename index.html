@@ -16,14 +16,6 @@
       <ul class="nav-links">
         <li><a href="#" id="nav-play" class="nav-link active">Play</a></li>
         <li><a href="#board" id="nav-board" class="nav-link">Leaderboard</a></li>
-        <!-- Shown when logged out -->
-        <li id="nav-guest"><a href="#" id="nav-login" class="nav-link">Login</a></li>
-        <!-- Shown when logged in -->
-        <li id="nav-member" class="nav-member" hidden>
-          <span id="nav-name" class="nav-name"></span>
-          <a href="admin/" id="nav-admin" class="nav-link" hidden>Admin</a>
-          <a href="#" id="nav-logout" class="nav-link">Logout</a>
-        </li>
       </ul>
     </div>
   </nav>
@@ -32,24 +24,10 @@
 
     <!-- Start screen -->
     <section id="start-screen">
-      <!-- Front page image: put your picture at images/front.png (or change the src below). Hidden automatically if the file is missing. -->
       <img id="hero-img" class="hero-img" src="images/front.png" alt="MLBB Trivia" onerror="this.hidden = true" />
       <h1>MLBB Trivia</h1>
       <p class="subtitle">10 random questions. How high can you rank?</p>
       <button id="start-btn" class="btn">Start Quiz</button>
-    </section>
-
-    <!-- Login / sign up screen -->
-    <section id="auth-screen" hidden>
-      <h1 id="auth-title">Log in</h1>
-      <form id="auth-form" class="save-form">
-        <input id="auth-username" type="text" maxlength="20" placeholder="Username" autocomplete="username" required />
-        <input id="auth-password" type="password" maxlength="72" placeholder="Password" autocomplete="current-password" required />
-        <button id="auth-submit" class="btn" type="submit">Log in</button>
-      </form>
-      <p id="auth-error" class="error" hidden></p>
-      <p id="auth-hint" class="hint" hidden>Username: 3-20 letters, numbers or underscores. Password: at least 8 characters.</p>
-      <p class="subtitle"><a href="#" id="auth-toggle" class="link">New here? Create an account</a></p>
     </section>
 
     <!-- Quiz screen -->
@@ -72,15 +50,15 @@
       <p class="big-score"><span id="final-score">0</span> / <span id="total">10</span></p>
       <p id="rank-title" class="rank"></p>
       <p id="rank-message" class="subtitle"></p>
-      <div id="save-area" class="save-form">
-        <p id="save-note" class="subtitle"></p>
-        <button id="save-btn" class="btn" type="button">Save Score to Leaderboard</button>
-      </div>
+      <form id="save-area" class="save-form">
+        <input id="name-input" type="text" maxlength="20" placeholder="Your name" required />
+        <button class="btn" type="submit" id="save-form-btn">Save Score to Leaderboard</button>
+      </form>
       <p id="saved-msg" class="new-best" hidden>Score saved!</p>
       <button id="restart-btn" class="btn">Play Again</button>
     </section>
 
-    <!-- Leaderboard (loaded from the database) -->
+    <!-- Leaderboard (saved in this browser) -->
     <div id="board">
       <h3>Top 10</h3>
       <ol id="leaderboard"></ol>
