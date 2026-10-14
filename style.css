@@ -8,9 +8,12 @@
   --accent-text: #1a1305;
   --good: #2ecc71;
   --bad: #ff5c6c;
+  --nav-height: 56px;
 }
 
 * { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-height) + 16px); }
 
 body {
   margin: 0;
@@ -19,11 +22,58 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: calc(var(--nav-height) + 16px) 16px 16px;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color: var(--text);
   background: radial-gradient(circle at top, #1b2750 0%, var(--bg) 60%);
 }
+
+/* ---------- Navigation bar ---------- */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  height: var(--nav-height);
+  background: rgba(21, 28, 51, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--card-border);
+}
+.nav-inner {
+  max-width: 900px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-brand {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--accent);
+  text-decoration: none;
+}
+.nav-links {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.nav-link {
+  display: block;
+  padding: 8px 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: color 0.15s, background 0.15s;
+}
+.nav-link:hover { color: var(--text); background: rgba(255, 255, 255, 0.06); }
+.nav-link.active { color: var(--accent); background: rgba(245, 185, 66, 0.12); }
 
 .card {
   width: 100%;
@@ -134,3 +184,8 @@ h2 { margin: 8px 0 20px; font-size: 1.25rem; line-height: 1.4; }
 #leaderboard li { padding: 4px 0; }
 
 .footer { margin-top: 16px; font-size: 0.75rem; color: var(--muted); text-align: center; }
+
+@media (max-width: 420px) {
+  .nav-brand { font-size: 1.05rem; }
+  .nav-link { padding: 8px 10px; font-size: 0.9rem; }
+}

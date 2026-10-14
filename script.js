@@ -84,6 +84,7 @@ async function startQuiz() {
   current = 0;
   score = 0;
   show("quiz");
+  setActiveNav("nav-play");
   showQuestion();
 }
 
@@ -156,11 +157,42 @@ function showResults() {
   show("result");
 }
 
+// ---------- Navigation bar ----------
+function setActiveNav(id) {
+  document.querySelectorAll(".nav-link").forEach((link) => link.classList.toggle("active", link.id === id));
+}
+
+// Leaving a quiz in progress throws away the round, so ask first
+function leaveQuizOk() {
+  if (screens.quiz.hidden) return true;
+  return confirm("Leave the quiz? Your progress will be lost.");
+}
+
+function goHome(event) {
+  event.preventDefault();
+  if (!leaveQuizOk()) return;
+  show("start");
+  setActiveNav("nav-play");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function goLeaderboard(event) {
+  event.preventDefault();
+  if (!leaveQuizOk()) return;
+  if (!screens.quiz.hidden) show("start"); // the leaderboard is hidden during a quiz
+  setActiveNav("nav-board");
+  loadLeaderboard();
+  el("board").scrollIntoView({ behavior: "smooth" });
+}
+
 // ---------- Wire up buttons ----------
 el("start-btn").addEventListener("click", startQuiz);
 el("next-btn").addEventListener("click", nextStep);
 el("restart-btn").addEventListener("click", startQuiz);
 saveForm.addEventListener("submit", saveScore);
+el("nav-brand").addEventListener("click", goHome);
+el("nav-play").addEventListener("click", goHome);
+el("nav-board").addEventListener("click", goLeaderboard);
 
 show("start");
 loadLeaderboard();
