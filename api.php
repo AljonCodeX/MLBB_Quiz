@@ -1,20 +1,30 @@
 <?php
 header('Content-Type: application/json');
-require 'config.php';
+require __DIR__ . '/auth.php';
 
-// Save a score (POST)
+// Save a score (POST). Only logged-in players can save, and the name comes from their account.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!str_contains($_SERVER['CONTENT_TYPE'] ?? '', 'application/json')) {
+        http_response_code(415);
+        exit(json_encode(['error' => 'Bad request']));
+    }
+    $user = current_user();
+    if (!$user) {
+        http_response_code(401);
+        exit(json_encode(['error' => 'Please log in to save your score']));
+    }
+
     $d = json_decode(file_get_contents('php://input'), true) ?: [];
-    $name = mb_substr(trim((string)($d['name'] ?? '')), 0, 20);
     $score = (int)($d['score'] ?? -1);
     $total = (int)($d['total'] ?? 0);
 
     // shortcut: the score is sent by the browser, so a determined player can fake it; upgrade by checking answers on the server
-    if ($name === '' || $total < 1 || $total > 50 || $score < 0 || $score > $total) {
+    if ($total < 1 || $total > 50 || $score < 0 || $score > $total) {
         http_response_code(400);
         exit(json_encode(['error' => 'Invalid score']));
     }
-    $pdo->prepare('INSERT INTO scores (name, score, total) VALUES (?, ?, ?)')->execute([$name, $score, $total]);
+    $pdo->prepare('INSERT INTO scores (user_id, name, score, total) VALUES (?, ?, ?, ?)')
+        ->execute([$user['id'], $user['username'], $score, $total]);
     exit(json_encode(['ok' => true]));
 }
 

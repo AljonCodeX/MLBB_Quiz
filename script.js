@@ -1,16 +1,23 @@
 const el = (id) => document.getElementById(id);
-const screens = { start: el("start-screen"), quiz: el("quiz-screen"), result: el("result-screen") };
+const screens = {
+  start: el("start-screen"),
+  quiz: el("quiz-screen"),
+  result: el("result-screen"),
+  auth: el("auth-screen"),
+};
 const optionsEl = el("options");
-const saveForm = el("save-form");
 
 let round = [];
 let current = 0;
 let score = 0;
+let user = null; // the logged-in player, or null
+let authMode = "login"; // "login" or "register"
+let returnTo = null; // "result" = go back to the results screen after logging in
 
 // ---------- Helpers ----------
 function show(name) {
   Object.entries(screens).forEach(([key, screen]) => (screen.hidden = key !== name));
-  el("board").hidden = name === "quiz";
+  el("board").hidden = name === "quiz" || name === "auth";
 }
 
 function shuffle(array) {
@@ -22,11 +29,108 @@ function shuffle(array) {
   return copy;
 }
 
-// Talk to api.php (which talks to the MySQL database)
+// Talk to the PHP files (which talk to the MySQL database)
 async function api(url, options) {
   const res = await fetch(url, options);
-  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-  return res.json();
+  let data = null;
+  try {
+    data = await res.json();
+  } catch (e) {
+    // response was not JSON
+  }
+  if (!res.ok) {
+    const err = new Error((data && data.error) || `Request failed: ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
+function postJson(url, body) {
+  return api(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+// ---------- Accounts ----------
+function renderNav() {
+  el("nav-guest").hidden = !!user;
+  el("nav-member").hidden = !user;
+  el("nav-name").textContent = user ? user.username : "";
+  el("nav-admin").hidden = !(user && user.role === "admin");
+}
+
+async function loadUser() {
+  try {
+    user = (await api("auth_api.php?action=me")).user;
+  } catch (e) {
+    user = null;
+  }
+  renderNav();
+}
+
+function renderAuthMode() {
+  const login = authMode === "login";
+  el("auth-title").textContent = login ? "Log in" : "Create account";
+  el("auth-submit").textContent = login ? "Log in" : "Sign up";
+  el("auth-toggle").textContent = login ? "New here? Create an account" : "Already have an account? Log in";
+  el("auth-password").autocomplete = login ? "current-password" : "new-password";
+  el("auth-hint").hidden = login;
+}
+
+function openAuth(mode) {
+  authMode = mode;
+  el("auth-form").reset();
+  el("auth-error").hidden = true;
+  renderAuthMode();
+  show("auth");
+  setActiveNav("nav-login");
+  el("auth-username").focus();
+}
+
+async function submitAuth(event) {
+  event.preventDefault();
+  const button = el("auth-submit");
+  button.disabled = true;
+  el("auth-error").hidden = true;
+  try {
+    const data = await postJson(`auth_api.php?action=${authMode}`, {
+      username: el("auth-username").value.trim(),
+      password: el("auth-password").value,
+    });
+    user = data.user;
+    renderNav();
+    el("auth-form").reset();
+    if (returnTo === "result") {
+      returnTo = null;
+      showResults();
+    } else {
+      show("start");
+      setActiveNav("nav-play");
+    }
+  } catch (e) {
+    el("auth-error").textContent = e.message;
+    el("auth-error").hidden = false;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function logout(event) {
+  event.preventDefault();
+  if (!leaveQuizOk()) return;
+  try {
+    await postJson("auth_api.php?action=logout", {});
+  } catch (e) {
+    // even if this fails, forget the user in the page
+  }
+  user = null;
+  returnTo = null;
+  renderNav();
+  show("start");
+  setActiveNav("nav-play");
 }
 
 // ---------- Leaderboard ----------
@@ -51,21 +155,29 @@ async function loadLeaderboard() {
   });
 }
 
-async function saveScore(event) {
-  event.preventDefault();
-  const button = saveForm.querySelector("button");
+async function saveScore() {
+  if (!user) {
+    returnTo = "result";
+    openAuth("login");
+    return;
+  }
+  const button = el("save-btn");
   button.disabled = true;
   try {
-    await api("api.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: el("name").value.trim(), score, total: round.length }),
-    });
-    saveForm.hidden = true;
+    await postJson("api.php", { score, total: round.length });
+    el("save-area").hidden = true;
     el("saved-msg").hidden = false;
     loadLeaderboard();
   } catch (e) {
     button.disabled = false;
+    if (e.status === 401) {
+      // session expired
+      user = null;
+      renderNav();
+      returnTo = "result";
+      openAuth("login");
+      return;
+    }
     alert("Could not save your score. Please try again.");
   }
 }
@@ -83,6 +195,7 @@ async function startQuiz() {
   }
   current = 0;
   score = 0;
+  returnTo = null;
   show("quiz");
   setActiveNav("nav-play");
   showQuestion();
@@ -162,9 +275,16 @@ function showResults() {
   el("rank-title").textContent = rank.title;
   el("rank-message").textContent = rank.msg;
 
-  saveForm.hidden = false;
-  saveForm.querySelector("button").disabled = false;
+  el("save-area").hidden = false;
+  el("save-btn").disabled = false;
   el("saved-msg").hidden = true;
+  if (user) {
+    el("save-note").textContent = `Saving as ${user.username}`;
+    el("save-btn").textContent = "Save Score to Leaderboard";
+  } else {
+    el("save-note").textContent = "Log in to put your score on the leaderboard.";
+    el("save-btn").textContent = "Log in / Sign up";
+  }
 
   show("result");
 }
@@ -183,6 +303,7 @@ function leaveQuizOk() {
 function goHome(event) {
   event.preventDefault();
   if (!leaveQuizOk()) return;
+  returnTo = null;
   show("start");
   setActiveNav("nav-play");
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -191,20 +312,36 @@ function goHome(event) {
 function goLeaderboard(event) {
   event.preventDefault();
   if (!leaveQuizOk()) return;
-  if (!screens.quiz.hidden) show("start"); // the leaderboard is hidden during a quiz
+  returnTo = null;
+  if (!screens.quiz.hidden || !screens.auth.hidden) show("start"); // the leaderboard is hidden during a quiz and on the login screen
   setActiveNav("nav-board");
   loadLeaderboard();
   el("board").scrollIntoView({ behavior: "smooth" });
+}
+
+function goLogin(event) {
+  event.preventDefault();
+  if (!leaveQuizOk()) return;
+  returnTo = null;
+  openAuth("login");
 }
 
 // ---------- Wire up buttons ----------
 el("start-btn").addEventListener("click", startQuiz);
 el("next-btn").addEventListener("click", nextStep);
 el("restart-btn").addEventListener("click", startQuiz);
-saveForm.addEventListener("submit", saveScore);
+el("save-btn").addEventListener("click", saveScore);
+el("auth-form").addEventListener("submit", submitAuth);
+el("auth-toggle").addEventListener("click", (event) => {
+  event.preventDefault();
+  openAuth(authMode === "login" ? "register" : "login");
+});
 el("nav-brand").addEventListener("click", goHome);
 el("nav-play").addEventListener("click", goHome);
 el("nav-board").addEventListener("click", goLeaderboard);
+el("nav-login").addEventListener("click", goLogin);
+el("nav-logout").addEventListener("click", logout);
 
 show("start");
+loadUser();
 loadLeaderboard();

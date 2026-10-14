@@ -1,9 +1,15 @@
 -- Import this file once in phpMyAdmin (Import tab). It creates the database, both tables and the starter questions.
+-- Already imported an older version? Don't re-import. Instead run this one line in the SQL tab:
+--   ALTER TABLE questions ADD COLUMN image VARCHAR(255) NULL;
+-- and, for the login system, these two statements (run each once):
+--   CREATE TABLE users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(20) NOT NULL UNIQUE, password_hash VARCHAR(255) NOT NULL, role ENUM('player','admin') NOT NULL DEFAULT 'player', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+--   ALTER TABLE scores ADD COLUMN user_id INT NULL, ADD CONSTRAINT fk_scores_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;
 
 CREATE DATABASE IF NOT EXISTS mlbb_quiz CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE mlbb_quiz;
 
 -- "answer" is the position of the correct option: 0 = option_a, 1 = option_b, 2 = option_c, 3 = option_d
+-- "image" is optional: the file name of a picture inside the images/ folder (for example layla.png). Leave it empty for no picture.
 CREATE TABLE IF NOT EXISTS questions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   category VARCHAR(50) NOT NULL,
@@ -12,15 +18,28 @@ CREATE TABLE IF NOT EXISTS questions (
   option_b VARCHAR(100) NOT NULL,
   option_c VARCHAR(100) NOT NULL,
   option_d VARCHAR(100) NOT NULL,
-  answer TINYINT NOT NULL
+  answer TINYINT NOT NULL,
+  image VARCHAR(255) NULL
+);
+
+-- Player and admin accounts. "role" is either 'player' or 'admin'. Passwords are stored hashed, never as plain text.
+-- Create the first admin by opening create_admin.php once in your browser.
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(20) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  role ENUM('player', 'admin') NOT NULL DEFAULT 'player',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS scores (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NULL,
   name VARCHAR(20) NOT NULL,
   score TINYINT NOT NULL,
   total TINYINT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_scores_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 INSERT INTO questions (category, question, option_a, option_b, option_c, option_d, answer) VALUES

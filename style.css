@@ -204,7 +204,27 @@ h2 { margin: 8px 0 20px; font-size: 1.25rem; line-height: 1.4; }
 
 .footer { margin-top: 16px; font-size: 0.75rem; color: var(--muted); text-align: center; }
 
-@media (max-width: 420px) {
-  .nav-brand { font-size: 1.05rem; }
+/* Account bits in the nav bar */
+.nav-links { margin-left: auto; align-items: center; }
+.nav-member { display: flex; align-items: center; gap: 4px; }
+.nav-name {
+  max-width: 110px;
+  padding: 0 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Login screen */
+.error { text-align: center; color: var(--bad); font-weight: 600; margin: 0 0 12px; }
+.hint { text-align: center; color: var(--muted); font-size: 0.85rem; margin: 0 0 12px; }
+.link { color: var(--accent); }
+
+@media (max-width: 480px) {
+  .nav-brand { display: none; }
   .nav-link { padding: 8px 10px; font-size: 0.9rem; }
+  .nav-name { display: none; }
 }
