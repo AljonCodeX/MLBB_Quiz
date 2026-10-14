@@ -20,12 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // 10 random questions (GET ?action=questions)
 if (($_GET['action'] ?? '') === 'questions') {
-    $rows = $pdo->query('SELECT category, question, option_a, option_b, option_c, option_d, answer FROM questions ORDER BY RAND() LIMIT 10')->fetchAll();
+    $rows = $pdo->query('SELECT category, question, option_a, option_b, option_c, option_d, answer, image FROM questions ORDER BY RAND() LIMIT 10')->fetchAll();
     exit(json_encode(array_map(fn($r) => [
         'category' => $r['category'],
         'question' => $r['question'],
         'options' => [$r['option_a'], $r['option_b'], $r['option_c'], $r['option_d']],
         'answer' => (int)$r['answer'],
+        'image' => $r['image'] ?: null,
     ], $rows)));
 }
 

@@ -96,6 +96,18 @@ function showQuestion() {
   el("score").textContent = `Score: ${score}`;
   el("category").textContent = q.category;
   el("question").textContent = q.question;
+
+  // Optional picture for this question (file lives in the images/ folder)
+  const img = el("question-img");
+  img.onerror = () => (img.hidden = true); // missing file: just show no picture
+  if (q.image) {
+    img.src = `images/${encodeURIComponent(q.image)}`;
+    img.hidden = false;
+  } else {
+    img.hidden = true;
+    img.removeAttribute("src");
+  }
+
   el("next-btn").hidden = true;
   optionsEl.innerHTML = "";
 
